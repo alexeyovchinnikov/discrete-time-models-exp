@@ -125,4 +125,4 @@ df
 
 # write results to CSV file
 timestamp() = Dates.format(now(UTC), "yy-mm-ddTHH")
-CSV.write("tables/competition_model_$(timestamp()).csv", df)
+CSV.write("tables/competition_model_dim_3_$(timestamp()).csv", df)
