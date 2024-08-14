@@ -1,5 +1,7 @@
 using DataFrames, CSV, Chain, Statistics, Printf, Latexify
 
+PATH = joinpath(@__DIR__,"tables/")
+
 function load_data(filename)
     evalparse(str::String) = eval(Meta.parse(str))
     @chain filename begin
@@ -12,9 +14,10 @@ function load_data(filename)
 end
 
 #------------------------------------------------------------
-file_list = filter(startswith("competition_model."), readdir("tables"))
-dfs = [load_data("tables/"*f) for f in file_list]
+file_list = filter(startswith("competition_model"), readdir(PATH))
+dfs = [load_data(PATH*f) for f in file_list]
 df = dfs[1]
+
 # check that the parameter orders of true_p and pred_p are the same
 @assert keys(df.true_p[1]) == keys(df.pred_p[1])
 PTuple = NamedTuple{keys(df.true_p[1])}
@@ -36,10 +39,10 @@ df_mean_median = @chain df begin
     rename(:taylor_n => "Taylor(n)", :interval_range => "Interval")
 end
 
-CSV.write("tables/error_table_means_medians.csv", df_mean_median)
+CSV.write(PATH*"error_table_means_medians.csv", df_mean_median)
 
 # write tables in latex output
-open("tables/latex_tables.tex", "w") do f
+open(PATH*"latex_tables.tex", "w") do f
     write(f, "Relative Mean and Median (Scientific Notation)\n")
     write(f, latexify(df_mean_median; env=:table, fmt="%.1e"))
     write(f, "Relative Mean and Median (Percentage Notation)\n")

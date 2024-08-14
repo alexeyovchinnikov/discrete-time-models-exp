@@ -1,4 +1,5 @@
 using HomotopyContinuation
+using Symbolics
 using Random, Distributions
 using TaylorSeries
 using LinearAlgebra
@@ -8,6 +9,7 @@ include("competition_models.jl")
 include("taylorseries_patch.jl")
 
 #----------------------------------------------
+# DIMS: 2
 original_x0 = [1.1, 1.2]
 n = length(original_x0)
 
@@ -20,32 +22,48 @@ original_params = NamedTuple([
     :r_2 => 0.5,
 ])
 
+#----------------------------------------------
+# DIMS: 3
+original_x0 = [1.1, 1.2, 1.3]
+n = length(original_x0)
+
+original_params = NamedTuple([
+    :a_11 => 0.1,
+    :a_12 => 0.2,
+    :a_13 => 0.25,
+    :a_21 => 0.3,
+    :a_22 => 0.4,
+    :a_23 => 0.45,
+    :a_31 => 0.5,
+    :a_32 => 0.55,
+    :a_33 => 0.6,
+    :r_1 => 0.4,
+    :r_2 => 0.5,
+    :r_3 => 0.6
+])
+
+#----------------------------------------------
 # simulation settings
 steps = n + 1 # simulation steps aka prolongs
 Ntaylor = 5 # max taylor approx.
-Nsims = 100 # sims per parameter set
+Nsims = 10 # sims per parameter set
 interval_ranges = [0.05, 0.1, 0.2, 0.25, 0.5]
-centre_exps = true
+#----------------------------------------------
 
-# Symbolic variables and parameters
-sym_vars = @variables x[1:n, 0:steps]
-sym_params = @variables a_11 a_12 a_21 a_22 r_1 r_2
-#sym_params = @variables a[1:n, 1:n] r[1:n]
-sym_vars_flat = [x...]
-# HomotopyContinuation Variables
-hc_vars = @var a[1:n,1:n] r[1:n]
-
-# parameter tuples
-PTuple = NamedTuple{(:a_11, :a_12, :a_21, :a_22, :r_1, :r_2)}
+# Symbolic parameters
+a_names = [Symbol("a_$(j)$(i)") for i in 1:n, j in 1:n]
+r_names = [Symbol("r_$(i)") for i in 1:n]
+param_names = (a_names..., r_names...) # used for NamedTuple
+sym_params = collect(Symbolics.variable.(param_names)) # used for equations
 
 # presample all parameter sets
 # parameter t is sampled from range [t ± p%]
-function create_intervals(r, interval_centre=values(original_params))
-    PTuple([RealInterval((1 - r) * p, (1 + r) * p) for p in interval_centre])
+function create_intervals(range, interval_centre=values(original_params))
+    NamedTuple{param_names}([RealInterval((1 - range) * p, (1 + range) * p) for p in interval_centre])
 end
 
 function sample_intervals(intervals)
-    PTuple([rand(Uniform(int.lb, int.ub)) for int in values(intervals)])
+    NamedTuple{param_names}([rand(Uniform(interval.lb, interval.ub)) for interval in values(intervals)])
 end
 #----------------------------------------------
 # results file headings
@@ -60,7 +78,7 @@ df = DataFrame([
 
 @time for I_range in interval_ranges
     println()
-    println("The interval size is $(I_range*100)%.")
+    println("The interval size = $(I_range*100)%.")
     param_intervals = create_intervals(I_range)
 
     for i in 1:Nsims
@@ -104,19 +122,15 @@ df = DataFrame([
             pred_params = NamedTuple(collect(Iterators.flatten([sys_vars[s] .=> res_pred[s] for s in 1:n])))
 
             push!(df, (i, I_range, q,
-                   PTuple(pred_params),
+                   NamedTuple{param_names}(pred_params),
                    sampled_params,
                    param_intervals
                    )
              )
-
         end
-
     end
 end
 
-df
-
 # write results to CSV file
 timestamp() = Dates.format(now(UTC), "yy-mm-ddTHH")
-CSV.write("tables/competition_model_dim_2_$(timestamp()).csv", df)
+CSV.write("competition-model/tables/competition_model_dim_$(n)_$(timestamp()).csv", df)

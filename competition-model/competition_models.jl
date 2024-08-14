@@ -20,24 +20,7 @@ function solve_and_filter_solutions(sys, intervals)
     return real_sol, all_real_sols
 end
 
-function lagrange_error_bound(f, c; a = 0, tol = 1e-3, max_k = 19)
-    # for function f(x) x∈[a,c] determine order k such that erro |ε| < tol
-    # See: https://en.wikipedia.org/wiki/Taylor%27s_theorem#Estimates_for_the_remainder
-    M = ceil(f(c))
-    for k in 1 : max_k
-        ε = M * (abs(c - a)^(k + 1))/factorial(k + 1)
-        if ε < tol
-            return k, ε
-        end
-    end
-    error("max k = $max_k reached")
-end
-
-c = 4
-k, ε = lagrange_error_bound(exp, c; a = 0, tol = 1e-3)
-
 # Original LPA model (exp version)
-
 function LPA(x, p)
     n  = length(x)
     a  = transpose(reshape(collect(p)[1:(n^2)], n, n))
@@ -54,14 +37,14 @@ function LPA_taylor_centred(dx, x, p, midpoints, order)
     n  = length(x)
     a  = transpose(reshape(p[1:(n^2)], n, n))
     r  = p[(n^2+1):length(p)]
-    
+
     exprs = [r[j] - sum(a[j, s] * x[s] for s in 1:n) for j in 1:n]
-    
+
     # centres are 'initial guesses' for parameters within some interval
     Midpoints = [substitute(exprs[j], p .=> collect(midpoints)) for j in 1:n]
-    
+
     # implicit form (output should be ≈ 0)
-    return -dx + [x[q] * exp_shift(exprs[q], Midpoints[q]; order) for q = 1:n]  
+    return -dx + [x[q] * exp_shift(exprs[q], Midpoints[q]; order) for q = 1:n]
 end
 
 exp_shift(x, c; order) = taylor_expand(exp, c; order)(x - c)
