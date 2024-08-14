@@ -4,7 +4,7 @@ using TaylorSeries
 using LinearAlgebra
 using DataFrames, CSV, Dates
 
-include("LPA_models.jl")
+include("competition_models.jl")
 include("taylorseries_patch.jl")
 
 #----------------------------------------------
@@ -16,7 +16,7 @@ original_params = NamedTuple([
     :a_12 => 0.2,
     :a_21 => 0.3,
     :a_22 => 0.4,
-    :r_1 => 0.4,        
+    :r_1 => 0.4,
     :r_2 => 0.5,
 ])
 
@@ -62,8 +62,8 @@ df = DataFrame([
     println()
     println("The interval size is $(I_range*100)%.")
     param_intervals = create_intervals(I_range)
-   
-    for i in 1:Nsims     
+
+    for i in 1:Nsims
        println("The simulation number = $i.")
 
        # sample new parameters and ICs for given interval
@@ -77,19 +77,19 @@ df = DataFrame([
             println()
             eqns = prolongate_LPA(data, sym_params, original_params, steps, q)
             hc_eqns = convert_to_HC_expression.(eqns)
-            
+
             F = Array{Any}(undef, n)
             sys_vars = Array{Any}(undef, n)
             res_pred = Array{Any}(undef, n)
             res_all_real = Array{Any}(undef, n)
-            
+
             # Breaking down the system of equations into n independent parts
-            for s in 1:n 
+            for s in 1:n
                 pivots = [j * n + s for j in 0:n]
                 F[s] = System(hc_eqns[pivots])
 
                 # Solve HC system and keep real solutions (or first complex)
-            
+
                 sys_vars[s] = Symbol.(variables(F[s]))
                 res_pred[s], res_all_real[s] = solve_and_filter_solutions(F[s], param_intervals[sys_vars[s]])
 
@@ -100,8 +100,8 @@ df = DataFrame([
             println()
 
             # pasting solutions for partitioned system together
-  
-            pred_params = NamedTuple(collect(Iterators.flatten([sys_vars[s] .=> res_pred[s] for s in 1:n]))) 
+
+            pred_params = NamedTuple(collect(Iterators.flatten([sys_vars[s] .=> res_pred[s] for s in 1:n])))
 
             push!(df, (i, I_range, q,
                    PTuple(pred_params),
