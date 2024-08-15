@@ -1,24 +1,4 @@
-#----------------------------------------------
-function filter_solutions(real_sols, intervals)
-    for rsol in real_sols
-        if all(in.(rsol, values(intervals)))
-            return rsol
-        end
-    end
-    return fill(0., length(intervals)) # default
-end
-
-function solve_and_filter_solutions(sys, intervals)
-    result = HomotopyContinuation.solve(sys, show_progress = false)
-
-    # only interested in real solutions
-    all_real_sols = real_solutions(result)
-
-    # filter solution(s) within intervals
-    real_sol = filter_solutions(all_real_sols, intervals)
-
-    return real_sol, all_real_sols
-end
+# Competition models
 
 # Original LPA model (exp version)
 function LPA(x, p)
@@ -47,9 +27,10 @@ function LPA_taylor_centred(dx, x, p, midpoints, order)
     return -dx + [x[q] * exp_shift(exprs[q], Midpoints[q]; order) for q = 1:n]
 end
 
+# Taylor series expansion of exp(x) around c
 exp_shift(x, c; order) = taylor_expand(exp, c; order)(x - c)
 
-#----------------------------------------------
+# Prolongate (extend) LPA model
 function prolongate_LPA(data, params, midpoints, nsteps, order)
     prolongations = Num[]
     for i in 1 : nsteps
@@ -57,20 +38,3 @@ function prolongate_LPA(data, params, midpoints, nsteps, order)
     end
     return prolongations
 end
-
-function convert_to_HC_expression(eqn)
-    eqn_vars = Symbolics.get_variables(eqn)
-    hc_vars = HomotopyContinuation.Variable.(Symbolics.tosymbol.(eqn_vars))
-    sub = substitute(eqn, Dict(eqn_vars .=> hc_vars))
-end
-
-function run_simulation(model, u0, params, nsteps)
-    sol = Array{Any}(undef, nsteps + 1)
-    sol[1] = u0
-    for i in 1 : (nsteps)
-      sol[i + 1] = model(sol[i], params)
-    end
-    return sol
-end
-
-#----------------------------------------------
