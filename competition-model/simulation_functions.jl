@@ -1,5 +1,11 @@
 # ----------------------------------------------
-function create_parameter_tuples(n, param_values=ones(n^2 + n))
+function create_x0_tuple(x0_values)
+    n = length(x0_values)
+    x0_names = [Symbol("x_$(i)") for i in 1:n]
+    return NamedTuple{(x0_names...,)}(x0_values)
+end
+
+function create_parameter_tuple(param_values, n)
     a_names = [Symbol("a_$(j)$(i)") for i in 1:n, j in 1:n]
     r_names = [Symbol("r_$(i)") for i in 1:n]
     param_names = (a_names..., r_names...)

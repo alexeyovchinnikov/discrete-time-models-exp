@@ -10,34 +10,18 @@ include("simulation_functions.jl")
 include("taylorseries_patch.jl")
 
 #----------------------------------------------
-# START
-# DIMS: 2
-original_x0 = [1.1, 1.2]
-Ndims = length(original_x0)
-
-original_params = NamedTuple([
-    :a_11 => 0.1,
-    :a_12 => 0.2,
-    :a_21 => 0.3,
-    :a_22 => 0.4,
-    :r_1 => 0.4,
-    :r_2 => 0.5,
-])
-
-ox = [1.1, 1.2]
-op = [0.1, 0.2, 0.3, 0.4, 0.4, 0.5]
-
-#----------------------------------------------
 # simulation settings
-
 Ntaylor = 2 # max taylor approx.
 Nsims = 1 # sims per parameter set
 interval_ranges = [0.1] #[0.05, 0.1, 0.2, 0.25, 0.5]
-#----------------------------------------------
+d = 2 # dimensions
 
-original_params = create_parameter_tuples(2)
+# 'original' initial conditions and parameters
+x0_vals = range(1, 2, length=d)
+param_vals = range(0.1, 0.5, length=d^2+d)
 
-# END
+original_x0 = create_x0_tuple(x0_vals)
+original_params = create_parameter_tuple(param_vals, d)
 #----------------------------------------------
 
 # results file headings
