@@ -13,7 +13,7 @@ include("taylorseries_patch.jl")
 # simulation settings
 Ntaylor = 5 # max taylor approx.
 Nsims = 10 # sims per parameter set
-interval_ranges = [0.1, 0.05, 0.1, 0.2, 0.25, 0.5]
+interval_ranges = [0.05, 0.1, 0.2, 0.25, 0.5]
 max_d = 4
 #----------------------------------------------
 
