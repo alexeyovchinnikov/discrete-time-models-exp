@@ -38,5 +38,5 @@ for d in 2:max_d
 
     # write results to CSV file
     timestamp() = Dates.format(now(UTC), "yy-mm-ddTHH")
-    CSV.write("competition-model/tables/competition_model_dim_$(d)_$(timestamp()).csv", result_df)
+    CSV.write("tables/competition_model_dim_$(d)_$(timestamp()).csv", result_df)
 end
